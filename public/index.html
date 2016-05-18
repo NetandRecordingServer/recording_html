@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>Live input record and playback</title>
+</head>
+<body>
+
+  <h1>Record to MP3 Test</h1>
+
+  <button onclick="stop=false">record</button>
+  <button onclick="stop=true">stop</button>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+	var socket = io();
+  </script>
+
+  <script>
+
+    var context = null
+    var node = null
+
+    var stop = true
+
+    function startUserMedia(stream) {
+      var input = audio_context.createMediaStreamSource(stream);
+      //recorder = new Recorder(input, { numChannels: 1 });
+
+      var config = { numChannels: 1 };
+      var bufferLen = 4096;
+      var numChannels = 1;
+
+      console.log( input.context)
+
+      context = input.context;
+      node = (context.createScriptProcessor ||
+              context.createJavaScriptNode).call(context, bufferLen, numChannels, numChannels);
+
+      node.onaudioprocess = function(e){
+      	if( stop ) return 
+		//for (var channel = 0; channel < numChannels; channel++){
+		//   buffer.push(e.inputBuffer.getChannelData(channel));
+		//}
+      	socket.emit("record", JSON.stringify( e.inputBuffer.getChannelData(0) ) )
+		console.log("Hmm What is this? ", e.inputBuffer.getChannelData(0) )
+      }
+
+      input.connect(node);
+      node.connect(context.destination);    //this should not be necessary
+    }
+
+
+    window.onload = function init() {
+      try {
+        // webkit shim
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        navigator.getUserMedia = ( navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia ||
+                         navigator.msGetUserMedia);
+        window.URL = window.URL || window.webkitURL;
+
+        audio_context = new AudioContext;
+
+      } catch (e) {
+        alert('No web audio support in this browser!');
+        console.log( e )
+      }
+
+      navigator.getUserMedia({audio: true}, startUserMedia, function(e) {
+        __log('No live audio input: ' + e);
+      });
+    };
+  </script>
+
+</body>
+</html>
