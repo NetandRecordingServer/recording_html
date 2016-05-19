@@ -68,7 +68,7 @@ io.on('connection', function(socket){
 
 		var dataview = encodeWAV( buffers );
 		
-		var wave_filename = "./test_"+i+".wav"
+		var wave_filename = "./public/test_"+i+".wav"
 
 		fs.writeFile( wave_filename, new Buffer( dataview ), "binary", function(err){
 			console.log( err )
@@ -199,6 +199,8 @@ function wave2Mp3( filename ){
 
 	function onFormat (format) {
 	  console.error('WAV format: %j', format);
+
+	console.error(filename);
 
 	  // encoding the wave file into an MP3 is as simple as calling pipe()
 	  var encoder = new lame.Encoder(format);
